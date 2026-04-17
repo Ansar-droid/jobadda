@@ -506,10 +506,12 @@
   </div>
 
   <div id="quick-replies">
-    <button class="chip" onclick="sendChip('Find jobs near me')">Find jobs near me</button>
-    <button class="chip" onclick="sendChip('Delivery boy jobs')">Delivery jobs</button>
-    <button class="chip" onclick="sendChip('BPO jobs in Bengaluru')">BPO jobs</button>
-    <button class="chip" onclick="sendChip('How to apply?')">How to apply?</button>
+    <button class="chip" onclick="sendChip('English')">English</button>
+    <button class="chip" onclick="sendChip('हिंदी')">हिंदी</button>
+    <button class="chip" onclick="sendChip('ಕನ್ನಡ')">ಕನ್ನಡ</button>
+    <button class="chip" onclick="sendChip('తెలుగు')">తెలుగు</button>
+    <button class="chip" onclick="sendChip('தமிழ்')">தமிழ்</button>
+    <button class="chip" onclick="sendChip('മലയാളം')">മലയാളം</button>
   </div>
 
   <div id="chat-bg">
@@ -518,8 +520,10 @@
     <div class="row bot">
       <div class="bot-av">AI</div>
       <div class="bubble bot">
-        Namaste! 🙏 I'm <strong>AddaMithra</strong>, your job assistant from <strong>IndiaJobAdda</strong>.<br><br>
-        I can help you find jobs, guide you through applying, and answer your questions. Kya main aapki madad kar sakta hoon? 😊
+        Namaste! 🙏 Welcome to <strong>IndiaJobAdda</strong>.<br><br>
+        Which language would you like to chat in?<br>
+        आप किस भाषा में बात करना चाहते हैं?<br>
+        ನೀವು ಯಾವ ಭಾಷೆಯಲ್ಲಿ ಮಾತನಾಡಲು ಬಯಸುತ್ತೀರಿ?
         <div class="meta">
           <span class="meta-time" id="welcome-time"></span>
         </div>
@@ -581,6 +585,174 @@ const unreadBadge = document.getElementById('unread-count');
 let history = [];
 let unreadCount = 0;
 let isAtBottom = true;
+let currentLang = 'en'; 
+let t = {}; 
+
+// 🌍 FULL TRANSLATION DICTIONARY (WITH ALL 11 FAQS)
+const translations = {
+  en: {
+    welcome: "I'm **AddaMithra**, your job assistant. I can help you find jobs and apply easily. 😊\n\nWhat is your name?",
+    askPhone: "Nice to meet you {name} 😊\n\n📱 Please share your 10-digit mobile number.",
+    errPhone: "❌ Please enter a valid 10-digit number",
+    askPin: "📍 Please share your 6-digit PIN code",
+    errPin: "❌ Enter a valid PIN code",
+    pinSuccess: "📍 {district}, {state}",
+    askJob: "💼 What type of job are you looking for?",
+    askCity: "📍 Where do you want to work?",
+    askExp: "💼 Do you have any experience?",
+    askEdu: "🎓 What is your education?",
+    summary: "✅ **Details Summary**\n\n👤 {name}\n📱 {phone}\n📍 {district}, {state}\n\n💼 {job}\n🏙 {city}\n📊 {exp}\n🎓 {edu}",
+    faqPlaceholder: "Select a Question...",
+    faqs: [
+      { q: "Where is my Job location?", a: "Your location is based on your pin code! 📍" },
+      { q: "What is the Job role available now?", a: "We have openings in Delivery, BPO, Kitchen, and Helper roles! 💼" },
+      { q: "What will be the salary?", a: "Salaries usually range from ₹15,000 to ₹30,000 per month based on the role. 💰" },
+      { q: "Is there an incentive?", a: "Yes, many roles offer daily/weekly performance incentives! 📈" },
+      { q: "How do I earn my referral bonus?", a: "When your friend joins and completes 15 days of work, you get your bonus! 🤝" },
+      { q: "Is there a travel allowance for Joining?", a: "This depends on the company hiring you, HR will confirm! 🚆" },
+      { q: "How do I reach HR?", a: "Click the WhatsApp or Call buttons below to reach us instantly! 👇" },
+      { q: "What is the minimum education required?", a: "We have jobs for below 10th, 10th, 12th, and Graduates! 🎓" },
+      { q: "Is English knowledge mandate?", a: "Not for all! Delivery and Helper roles just need the local language. 🗣️" },
+      { q: "Where is the Office?", a: "Our main office is in Bengaluru, but joining locations depend on the company. 🏢" },
+      { q: "How is my career growth with India Job adda?", a: "Excellent! Many candidates become team leads within 6-12 months! 🚀" }
+    ]
+  },
+  hi: {
+    welcome: "मैं **AddaMithra** हूँ, आपका जॉब असिस्टेंट। मैं जॉब ढूंढने में आपकी मदद करूँगा। 😊\n\nआपका नाम क्या है?",
+    askPhone: "आपसे मिलकर अच्छा लगा {name} 😊\n\n📱 कृपया अपना 10-अंकों का मोबाइल नंबर दर्ज करें।",
+    errPhone: "❌ कृपया मान्य 10-अंकों का नंबर दर्ज करें",
+    askPin: "📍 अपना 6-अंकों का पिन कोड बताएं",
+    errPin: "❌ अमान्य पिन कोड",
+    pinSuccess: "📍 {district}, {state}",
+    askJob: "💼 आप किस प्रकार की जॉब ढूंढ रहे हैं?",
+    askCity: "📍 आप कहाँ काम करना चाहते हैं?",
+    askExp: "💼 क्या आपके पास कोई कार्य अनुभव है?",
+    askEdu: "🎓 आपकी शैक्षणिक योग्यता क्या है?",
+    summary: "✅ **विवरण (Summary)**\n\n👤 {name}\n📱 {phone}\n📍 {district}, {state}\n\n💼 {job}\n🏙 {city}\n📊 {exp}\n🎓 {edu}",
+    faqPlaceholder: "एक प्रश्न चुनें...",
+    faqs: [
+      { q: "मेरी जॉब लोकेशन कहाँ होगी?", a: "आपकी लोकेशन आपके पिन कोड के आधार पर तय की जाएगी! 📍" },
+      { q: "अभी कौन सी जॉब उपलब्ध हैं?", a: "हमारे पास डिलीवरी, BPO, किचन और हेल्पर की जॉब्स हैं! 💼" },
+      { q: "सैलरी कितनी होगी?", a: "सैलरी आमतौर पर भूमिका के आधार पर ₹15,000 से ₹30,000 प्रति माह होती है। 💰" },
+      { q: "क्या कोई इंसेंटिव (Incentive) है?", a: "हाँ, कई नौकरियों में प्रदर्शन के आधार पर इंसेंटिव मिलता है! 📈" },
+      { q: "मैं अपना रेफरल बोनस कैसे कमा सकता हूँ?", a: "जब आपका दोस्त ज्वाइन करेगा और 15 दिन काम करेगा, तब आपको बोनस मिलेगा! 🤝" },
+      { q: "क्या ज्वाइनिंग के लिए ट्रैवल अलाउंस मिलेगा?", a: "यह हायर करने वाली कंपनी पर निर्भर करता है, HR कन्फर्म करेंगे! 🚆" },
+      { q: "मैं HR से कैसे संपर्क करूं?", a: "हमसे संपर्क करने के लिए नीचे दिए गए WhatsApp या Call बटन पर क्लिक करें! 👇" },
+      { q: "न्यूनतम शिक्षा क्या चाहिए?", a: "हमारे पास 10वीं से कम, 10वीं, 12वीं और ग्रेजुएट्स के लिए नौकरियां हैं! 🎓" },
+      { q: "क्या अंग्रेजी जानना जरूरी है?", a: "सबके लिए नहीं! डिलीवरी और हेल्पर के लिए सिर्फ स्थानीय भाषा चाहिए। 🗣️" },
+      { q: "ऑफिस कहाँ है?", a: "हमारा मुख्य कार्यालय बेंगलुरु में है, लेकिन आपकी जॉब लोकेशन कंपनी पर निर्भर करेगी। 🏢" },
+      { q: "India Job Adda के साथ मेरा करियर ग्रोथ कैसा रहेगा?", a: "बहुत बढ़िया! कई उम्मीदवार 6-12 महीनों के भीतर टीम लीड बन जाते हैं! 🚀" }
+    ]
+  },
+  kn: {
+    welcome: "ನಾನು **AddaMithra**, ನಿಮ್ಮ ಉದ್ಯೋಗ ಸಹಾಯಕ. ಉದ್ಯೋಗ ಹುಡುಕಲು ನಾನು ಸಹಾಯ ಮಾಡುತ್ತೇನೆ. 😊\n\nನಿಮ್ಮ ಹೆಸರೇನು?",
+    askPhone: "ನಿಮ್ಮನ್ನು ಭೇಟಿಯಾಗಲು ಸಂತೋಷವಾಗಿದೆ {name} 😊\n\n📱 ದಯವಿಟ್ಟು ನಿಮ್ಮ 10-ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ.",
+    errPhone: "❌ ದಯವಿಟ್ಟು ಸರಿಯಾದ 10-ಅಂಕಿಯ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ",
+    askPin: "📍 ದಯವಿಟ್ಟು ನಿಮ್ಮ 6-ಅಂಕಿಯ ಪಿನ್ ಕೋಡ್ ನಮೂದಿಸಿ",
+    errPin: "❌ ಸರಿಯಾದ ಪಿನ್ ಕೋಡ್ ನಮೂದಿಸಿ",
+    pinSuccess: "📍 {district}, {state}",
+    askJob: "💼 ನೀವು ಯಾವ ರೀತಿಯ ಕೆಲಸವನ್ನು ಹುಡುಕುತ್ತಿದ್ದೀರಿ?",
+    askCity: "📍 ನೀವು ಎಲ್ಲಿ ಕೆಲಸ ಮಾಡಲು ಬಯಸುತ್ತೀರಿ?",
+    askExp: "💼 ನಿಮಗೆ ಯಾವುದೇ ಕೆಲಸದ ಅನುಭವವಿದೆಯೇ?",
+    askEdu: "🎓 ನಿಮ್ಮ ಶಿಕ್ಷಣವೇನು?",
+    summary: "✅ **ವಿವರಗಳು (Summary)**\n\n👤 {name}\n📱 {phone}\n📍 {district}, {state}\n\n💼 {job}\n🏙 {city}\n📊 {exp}\n🎓 {edu}",
+    faqPlaceholder: "ಒಂದು ಪ್ರಶ್ನೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ...",
+    faqs: [
+      { q: "ನನ್ನ ಕೆಲಸದ ಸ್ಥಳ ಎಲ್ಲಿದೆ?", a: "ನಿಮ್ಮ ಪಿನ್ ಕೋಡ್ ಆಧಾರದ ಮೇಲೆ ಸ್ಥಳವನ್ನು ನಿಗದಿಪಡಿಸಲಾಗುತ್ತದೆ! 📍" },
+      { q: "ಯಾವ ಕೆಲಸಗಳು ಲಭ್ಯವಿದೆ?", a: "ಡೆಲಿವರಿ, BPO, ಅಡುಗೆಮನೆ ಮತ್ತು ಸಹಾಯಕ ಪಾತ್ರಗಳಲ್ಲಿ ಉದ್ಯೋಗಗಳಿವೆ! 💼" },
+      { q: "ಸಂಬಳ ಎಷ್ಟು ಇರುತ್ತದೆ?", a: "ಸಂಬಳವು ಪಾತ್ರವನ್ನು ಆಧರಿಸಿ ತಿಂಗಳಿಗೆ ₹15,000 ದಿಂದ ₹30,000 ವರೆಗೆ ಇರುತ್ತದೆ. 💰" },
+      { q: "ಇನ್ಸೆಂಟಿವ್ (Incentive) ಇದೆಯೇ?", a: "ಹೌದು, ಅನೇಕ ಕೆಲಸಗಳಲ್ಲಿ ಕಾರ್ಯಕ್ಷಮತೆ ಆಧಾರಿತ ಇನ್ಸೆಂಟಿವ್ ಇರುತ್ತದೆ! 📈" },
+      { q: "ನನ್ನ ರೆಫರಲ್ ಬೋನಸ್ ಪಡೆಯುವುದು ಹೇಗೆ?", a: "ನಿಮ್ಮ ಸ್ನೇಹಿತ ಸೇರಿ 15 ದಿನಗಳ ಕೆಲಸ ಮುಗಿಸಿದ ನಂತರ, ನಿಮಗೆ ಬೋನಸ್ ಸಿಗುತ್ತದೆ! 🤝" },
+      { q: "ಸೇರಲು ಪ್ರಯಾಣ ಭತ್ಯೆ (Travel allowance) ಇದೆಯೇ?", a: "ಇದು ಕಂಪನಿಯನ್ನು ಅವಲಂಬಿಸಿದೆ, HR ಖಚಿತಪಡಿಸುತ್ತಾರೆ! 🚆" },
+      { q: "HR ಅನ್ನು ತಲುಪುವುದು ಹೇಗೆ?", a: "ತಕ್ಷಣ ನಮ್ಮನ್ನು ತಲುಪಲು ಕೆಳಗಿನ WhatsApp ಅಥವಾ Call ಬಟನ್ ಕ್ಲಿಕ್ ಮಾಡಿ! 👇" },
+      { q: "ಕನಿಷ್ಠ ಶಿಕ್ಷಣ ಏನು ಬೇಕು?", a: "10ನೇ ತರಗತಿಗಿಂತ ಕಡಿಮೆ, 10ನೇ, 12ನೇ ಮತ್ತು ಪದವೀಧರರಿಗೆ ಉದ್ಯೋಗಗಳಿವೆ! 🎓" },
+      { q: "ಇಂಗ್ಲಿಷ್ ಜ್ಞಾನ ಕಡ್ಡಾಯವೇ?", a: "ಎಲ್ಲರಿಗೂ ಅಲ್ಲ! ಡೆಲಿವರಿ ಮತ್ತು ಹೆಲ್ಪರ್ ಕೆಲಸಗಳಿಗೆ ಸ್ಥಳೀಯ ಭಾಷೆ ಸಾಕು. 🗣️" },
+      { q: "ಆಫೀಸ್ ಎಲ್ಲಿದೆ?", a: "ನಮ್ಮ ಮುಖ್ಯ ಕಛೇರಿ ಬೆಂಗಳೂರಿನಲ್ಲಿದೆ, ಆದರೆ ಸೇರುವ ಸ್ಥಳ ಕಂಪನಿಯನ್ನು ಅವಲಂಬಿಸಿರುತ್ತದೆ. 🏢" },
+      { q: "India Job Adda ಜೊತೆ ನನ್ನ ವೃತ್ತಿಜೀವನದ ಬೆಳವಣಿಗೆ ಹೇಗಿರುತ್ತದೆ?", a: "ಅತ್ಯುತ್ತಮ! ಅನೇಕರು 6-12 ತಿಂಗಳುಗಳಲ್ಲಿ ಟೀಮ್ ಲೀಡ್ ಆಗುತ್ತಾರೆ! 🚀" }
+    ]
+  },
+  te: {
+    welcome: "నేను **AddaMithra**, మీ జాబ్ అసిస్టెంట్. జాబ్ వెతకడంలో నేను మీకు సహాయం చేస్తాను. 😊\n\nమీ పేరు ఏమిటి?",
+    askPhone: "మిమ్మల్ని కలవడం సంతోషంగా ఉంది {name} 😊\n\n📱 దయచేసి మీ 10-అంకెల మొబైల్ నంబర్‌ను నమోదు చేయండి.",
+    errPhone: "❌ దయచేసి సరైన 10-అంకెల నంబర్‌ను నమోదు చేయండి",
+    askPin: "📍 దయచేసి మీ 6-అంకెల పిన్ కోడ్‌ను నమోదు చేయండి",
+    errPin: "❌ సరైన పిన్ కోడ్ నమోదు చేయండి",
+    pinSuccess: "📍 {district}, {state}",
+    askJob: "💼 మీరు ఎలాంటి ఉద్యోగం కోసం చూస్తున్నారు?",
+    askCity: "📍 మీరు ఎక్కడ పని చేయాలనుకుంటున్నారు?",
+    askExp: "💼 మీకు ఏమైనా పని అనుభవం ఉందా?",
+    askEdu: "🎓 మీ విద్యా అర్హత ఏమిటి?",
+    summary: "✅ **వివరాలు (Summary)**\n\n👤 {name}\n📱 {phone}\n📍 {district}, {state}\n\n💼 {job}\n🏙 {city}\n📊 {exp}\n🎓 {edu}",
+    faqPlaceholder: "ఒక ప్రశ్నను ఎంచుకోండి...",
+    faqs: [
+      { q: "నా ఉద్యోగ స్థలం ఎక్కడ ఉంటుంది?", a: "మీ పిన్ కోడ్ ఆధారంగా స్థలం కేటాయించబడుతుంది! 📍" },
+      { q: "ప్రస్తుతం ఏ ఉద్యోగాలు ఉన్నాయి?", a: "డెలివరీ, BPO, కిచెన్ మరియు హెల్పర్ ఉద్యోగాలు ఉన్నాయి! 💼" },
+      { q: "జీతం ఎంత ఉంటుంది?", a: "పాత్రను బట్టి నెలకు ₹15,000 నుండి ₹30,000 వరకు ఉంటుంది. 💰" },
+      { q: "ఇన్సెంటివ్ (Incentive) ఉంటుందా?", a: "అవును, పనితీరు ఆధారంగా ఇన్సెంటివ్స్ ఉంటాయి! 📈" },
+      { q: "నా రిఫరల్ బోనస్ ఎలా పొందాలి?", a: "మీ స్నేహితుడు జాయిన్ అయ్యి 15 రోజులు పని చేసిన తర్వాత, మీకు బోనస్ వస్తుంది! 🤝" },
+      { q: "జాయినింగ్ కోసం ట్రావెల్ అలవెన్స్ ఉంటుందా?", a: "ఇది కంపెనీపై ఆధారపడి ఉంటుంది, HR మీకు కన్ఫర్మ్ చేస్తారు! 🚆" },
+      { q: "నేను HR ని ఎలా సంప్రదించాలి?", a: "మమ్మల్ని సంప్రదించడానికి కింద ఉన్న WhatsApp లేదా Call బటన్‌లను క్లిక్ చేయండి! 👇" },
+      { q: "కనీస విద్యార్హత ఏమిటి?", a: "10వ తరగతి కంటే తక్కువ, 10వ, 12వ మరియు డిగ్రీ వారికి ఉద్యోగాలు ఉన్నాయి! 🎓" },
+      { q: "ఇంగ్లీష్ తప్పనిసరిగా రావాలా?", a: "అందరికీ కాదు! డెలివరీ మరియు హెల్పర్ ఉద్యోగాలకు స్థానిక భాష వస్తే చాలు. 🗣️" },
+      { q: "ఆఫీస్ ఎక్కడ ఉంది?", a: "మా ప్రధాన కార్యాలయం బెంగళూరులో ఉంది, కానీ జాయినింగ్ లొకేషన్ కంపెనీని బట్టి ఉంటుంది. 🏢" },
+      { q: "India Job Adda తో నా కెరీర్ గ్రోత్ ఎలా ఉంటుంది?", a: "చాలా బాగుంటుంది! చాలా మంది 6-12 నెలల్లో టీమ్ లీడ్ అవుతారు! 🚀" }
+    ]
+  },
+  ta: {
+    welcome: "நான் **AddaMithra**, உங்கள் வேலை உதவியாளர். வேலை தேட நான் உங்களுக்கு உதவுகிறேன். 😊\n\nஉங்கள் பெயர் என்ன?",
+    askPhone: "உங்களை சந்தித்ததில் மகிழ்ச்சி {name} 😊\n\n📱 உங்கள் 10 இலக்க மொபைல் எண்ணை உள்ளிடவும்.",
+    errPhone: "❌ சரியான 10 இலக்க எண்ணை உள்ளிடவும்",
+    askPin: "📍 உங்கள் 6 இலக்க பின்கோடை உள்ளிடவும்",
+    errPin: "❌ சரியான பின்கோடை உள்ளிடவும்",
+    pinSuccess: "📍 {district}, {state}",
+    askJob: "💼 நீங்கள் எந்த வகையான வேலையைத் தேடுகிறீர்கள்?",
+    askCity: "📍 நீங்கள் எங்கு வேலை செய்ய விரும்புகிறீர்கள்?",
+    askExp: "💼 உங்களுக்கு முன் அனுபவம் உள்ளதா?",
+    askEdu: "🎓 உங்கள் கல்வித் தகுதி என்ன?",
+    summary: "✅ **விவரங்கள் (Summary)**\n\n👤 {name}\n📱 {phone}\n📍 {district}, {state}\n\n💼 {job}\n🏙 {city}\n📊 {exp}\n🎓 {edu}",
+    faqPlaceholder: "ஒரு கேள்வியைத் தேர்ந்தெடுக்கவும்...",
+    faqs: [
+      { q: "எனது வேலை இடம் எங்கே?", a: "உங்கள் பின்கோடு அடிப்படையில் இடம் ஒதுக்கப்படும்! 📍" },
+      { q: "தற்போது என்ன வேலைகள் உள்ளன?", a: "டெலிவரி, BPO, சமையலறை மற்றும் உதவியாளர் வேலைகள் உள்ளன! 💼" },
+      { q: "சம்பளம் எவ்வளவு இருக்கும்?", a: "வேலையைப் பொறுத்து மாதம் ₹15,000 முதல் ₹30,000 வரை இருக்கும். 💰" },
+      { q: "ஊக்கத்தொகை (Incentive) உள்ளதா?", a: "ஆம், பல வேலைகளில் செயல்திறன் அடிப்படையில் ஊக்கத்தொகை உண்டு! 📈" },
+      { q: "எனது பரிந்துரை போனஸை (Referral bonus) எவ்வாறு பெறுவது?", a: "உங்கள் நண்பர் சேர்ந்து 15 நாட்கள் வேலை செய்த பிறகு உங்களுக்கு போனஸ் கிடைக்கும்! 🤝" },
+      { q: "சேருவதற்கு பயணப்படி (Travel allowance) உள்ளதா?", a: "இது நிறுவனத்தைப் பொறுத்தது, HR உறுதிப்படுத்துவார்கள்! 🚆" },
+      { q: "நான் எப்படி HR-ஐ தொடர்புகொள்வது?", a: "எங்களை தொடர்புகொள்ள கீழே உள்ள WhatsApp அல்லது Call பட்டனை கிளிக் செய்யவும்! 👇" },
+      { q: "குறைந்தபட்ச கல்வித் தகுதி என்ன?", a: "10ஆம் வகுப்புக்கு கீழ், 10வது, 12வது மற்றும் பட்டதாரிகளுக்கான வேலைகள் உள்ளன! 🎓" },
+      { q: "ஆங்கில அறிவு கட்டாயமா?", a: "அனைவருக்கும் இல்லை! டெலிவரி மற்றும் உதவியாளர் வேலைகளுக்கு உள்ளூர் மொழி மட்டுமே தேவை. 🗣️" },
+      { q: "அலுவலகம் எங்கே உள்ளது?", a: "எங்கள் தலைமை அலுவலகம் பெங்களூரில் உள்ளது, ஆனால் சேரும் இடம் நிறுவனத்தைப் பொறுத்தது. 🏢" },
+      { q: "India Job Adda உடன் எனது தொழில் வளர்ச்சி எப்படி இருக்கும்?", a: "மிகச் சிறப்பு! பலர் 6-12 மாதங்களில் டீம் லீடர் ஆகிறார்கள்! 🚀" }
+    ]
+  },
+  ml: {
+    welcome: "ഞാൻ **AddaMithra**, നിങ്ങളുടെ ജോലി സഹായിയാണ്. ജോലി കണ്ടെത്താൻ ഞാൻ സഹായിക്കാം. 😊\n\nനിങ്ങളുടെ പേരെന്താണ്?",
+    askPhone: "കണ്ടതിൽ സന്തോഷം {name} 😊\n\n📱 നിങ്ങളുടെ 10 അക്ക മൊബൈൽ നമ്പർ നൽകുക.",
+    errPhone: "❌ ദയവായി ശരിയായ 10 അക്ക നമ്പർ നൽകുക",
+    askPin: "📍 നിങ്ങളുടെ 6 അക്ക പിൻ കോഡ് നൽകുക",
+    errPin: "❌ ശരിയായ പിൻ കോഡ് നൽകുക",
+    pinSuccess: "📍 {district}, {state}",
+    askJob: "💼 ഏത് തരത്തിലുള്ള ജോലിയാണ് നിങ്ങൾ അന്വേഷിക്കുന്നത്?",
+    askCity: "📍 നിങ്ങൾക്ക് എവിടെയാണ് ജോലി ചെയ്യേണ്ടത്?",
+    askExp: "💼 നിങ്ങൾക്ക് മുൻപരിചയമുണ്ടോ?",
+    askEdu: "🎓 നിങ്ങളുടെ വിദ്യാഭ്യാസ യോഗ്യത എന്താണ്?",
+    summary: "✅ **വിവരങ്ങൾ (Summary)**\n\n👤 {name}\n📱 {phone}\n📍 {district}, {state}\n\n💼 {job}\n🏙 {city}\n📊 {exp}\n🎓 {edu}",
+    faqPlaceholder: "ഒരു ചോദ്യം തിരഞ്ഞെടുക്കുക...",
+    faqs: [
+      { q: "എന്റെ ജോലി സ്ഥലം എവിടെയായിരിക്കും?", a: "നിങ്ങളുടെ പിൻ കോഡ് അടിസ്ഥാനമാക്കിയാണ് സ്ഥലം തീരുമാനിക്കുന്നത്! 📍" },
+      { q: "ഇപ്പോൾ ഏത് ജോലികളാണ് ലഭ്യമായിട്ടുള്ളത്?", a: "ഡെലിവറി, BPO, കിച്ചൺ, ഹെൽപ്പർ എന്നീ ഒഴിവുകളുണ്ട്! 💼" },
+      { q: "ശമ്പളം എത്രയായിരിക്കും?", a: "ജോലിയുടെ സ്വഭാവമനുസരിച്ച് പ്രതിമാസം ₹15,000 മുതൽ ₹30,000 വരെയായിരിക്കും. 💰" },
+      { q: "ഇൻസെന്റീവ് (Incentive) ഉണ്ടോ?", a: "ഉണ്ട്, മികച്ച പ്രകടനത്തിന് ഇൻസെന്റീവ് ലഭിക്കുന്ന ജോലികളുണ്ട്! 📈" },
+      { q: "എന്റെ റഫറൽ ബോണസ് എങ്ങനെ നേടാം?", a: "നിങ്ങളുടെ സുഹൃത്ത് ജോലിയിൽ പ്രവേശിച്ച് 15 ദിവസം പൂർത്തിയാക്കുമ്പോൾ ബോണസ് ലഭിക്കും! 🤝" },
+      { q: "ജോലിയിൽ ചേരാൻ യാത്രാബത്ത (Travel allowance) ഉണ്ടോ?", a: "ഇത് കമ്പനിയെ ആശ്രയിച്ചിരിക്കും, HR നിങ്ങളെ അറിയിക്കും! 🚆" },
+      { q: "എനിക്ക് എങ്ങനെ HR നെ ബന്ധപ്പെടാം?", a: "ഞങ്ങളെ ബന്ധപ്പെടാൻ താഴെയുള്ള WhatsApp അല്ലെങ്കിൽ Call ബട്ടണുകളിൽ ക്ലിക്ക് ചെയ്യുക! 👇" },
+      { q: "ഏറ്റവും കുറഞ്ഞ വിദ്യാഭ്യാസ യോഗ്യത എന്താണ്?", a: "10-ാം ക്ലാസിൽ താഴെയുള്ളവർക്കും, 10, 12 പാസായവർക്കും ബിരുദധാരികൾക്കും ജോലികളുണ്ട്! 🎓" },
+      { q: "ഇംഗ്ലീഷ് അറിവ് നിർബന്ധമാണോ?", a: "എല്ലാവർക്കും അല്ല! ഡെലിവറി, ഹെൽപ്പർ ജോലികൾക്ക് പ്രാദേശിക ഭാഷ മതിയാകും. 🗣️" },
+      { q: "ഓഫീസ് എവിടെയാണ്?", a: "ഞങ്ങളുടെ പ്രധാന ഓഫീസ് ബെംഗളൂരുവിലാണ്, എന്നാൽ ജോലി സ്ഥലം കമ്പനിയെ ആശ്രയിച്ചിരിക്കും. 🏢" },
+      { q: "India Job Adda വഴി എന്റെ കരിയർ വളർച്ച എങ്ങനെയായിരിക്കും?", a: "വളരെ മികച്ചതായിരിക്കും! പലരും 6-12 മാസത്തിനുള്ളിൽ ടീം ലീഡ് ആയി മാറാറുണ്ട്! 🚀" }
+    ]
+  }
+};
 
 // Set welcome time
 document.getElementById('welcome-time').textContent = getTime();
@@ -618,28 +790,18 @@ chatBg.addEventListener('scroll', () => {
 function addBubble(text, sender) {
   const row = document.createElement('div');
   row.className = 'row ' + sender;
-
   if (sender === 'bot') {
     const av = document.createElement('div');
     av.className = 'bot-av';
     av.textContent = 'AI';
     row.appendChild(av);
   }
-
   const bub = document.createElement('div');
   bub.className = 'bubble ' + sender;
-
-  // Convert **bold** and newlines
-  const formatted = text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n/g, '<br>');
-
-  bub.innerHTML = formatted +
-    `<div class="meta"><span class="meta-time">${getTime()}</span>${sender === 'user' ? '<span class="meta-tick">✓✓</span>' : ''}</div>`;
-
+  const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  bub.innerHTML = formatted + `<div class="meta"><span class="meta-time">${getTime()}</span>${sender === 'user' ? '<span class="meta-tick">✓✓</span>' : ''}</div>`;
   row.appendChild(bub);
   chatBg.appendChild(row);
-
   if (isAtBottom) {
     setTimeout(() => scrollToBottom(), 30);
   } else if (sender === 'bot') {
@@ -654,46 +816,24 @@ function addBubble(text, sender) {
 function showOptionBubbles(options) {
   const row = document.createElement('div');
   row.className = 'row bot';
-
   const av = document.createElement('div');
-  av.className = 'bot-av';
-  av.textContent = 'AI';
-  row.appendChild(av);
-
+  av.className = 'bot-av'; av.textContent = 'AI'; row.appendChild(av);
   const wrap = document.createElement('div');
-  wrap.style.display = 'flex';
-  wrap.style.flexWrap = 'wrap';
-  wrap.style.gap = '6px';
-
+  wrap.style.display = 'flex'; wrap.style.flexWrap = 'wrap'; wrap.style.gap = '6px';
   options.forEach(opt => {
     const btn = document.createElement('div');
-    btn.className = 'chip';
-    btn.innerText = opt;
-
-    btn.onclick = () => {
-      sendMessage(opt);
-    };
-
+    btn.className = 'chip'; btn.innerText = opt;
+    btn.onclick = () => sendMessage(opt);
     wrap.appendChild(btn);
   });
-
-  row.appendChild(wrap);
-  chatBg.appendChild(row);
-
+  row.appendChild(wrap); chatBg.appendChild(row);
   setTimeout(() => scrollToBottom(), 30);
 }
 
 function showTyping() {
-  const row = document.createElement('div');
-  row.className = 'row bot';
-  row.id = 'typing-row';
-  const av = document.createElement('div');
-  av.className = 'bot-av'; av.textContent = 'AI';
-  row.appendChild(av);
-  const bub = document.createElement('div');
-  bub.className = 'typing-bub';
-  bub.innerHTML = '<span></span><span></span><span></span>';
-  row.appendChild(bub);
+  const row = document.createElement('div'); row.className = 'row bot'; row.id = 'typing-row';
+  const av = document.createElement('div'); av.className = 'bot-av'; av.textContent = 'AI'; row.appendChild(av);
+  const bub = document.createElement('div'); bub.className = 'typing-bub'; bub.innerHTML = '<span></span><span></span><span></span>'; row.appendChild(bub);
   chatBg.appendChild(row);
   if (isAtBottom) setTimeout(() => scrollToBottom(), 30);
 }
@@ -705,8 +845,7 @@ function removeTyping() {
 
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
@@ -722,243 +861,168 @@ function saveLead() {
     education: window.userData.education || "",
     exp: window.userData.experience || ""
   };
-
   fetch("https://script.google.com/macros/s/AKfycbyxfPgO-nFLM4i_72LBnPgxjzCe6XiGsOFfv-sA2R9R07UOXa_Sx-IgCgzAU8riGfC-QA/exec", {
     method: "POST",
     body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    }
-  })
-  .then(res => res.json())
-  .then(res => console.log("Lead successfully sent to Google Sheets!", res))
-  .catch(err => console.error("Error saving lead:", err));
+    headers: { "Content-Type": "text/plain;charset=utf-8" }
+  }).catch(err => console.error("Error saving lead:", err));
 }
 
 async function sendMessage(text) {
   const userText = text || msgInput.value.trim();
   if (!userText) return;
-  msgInput.value = '';
-  msgInput.style.height = 'auto';
+  msgInput.value = ''; msgInput.style.height = 'auto';
   addBubble(userText, 'user');
   history.push({ role: 'user', content: userText });
   statusEl.textContent = 'typing...';
   showTyping();
 
   setTimeout(() => {
-  removeTyping();
+    removeTyping();
 
-  let reply = "";
+    // STEP 0 - LANGUAGE SELECTION -> WELCOME & ASK NAME
+    if (!window.step) {
+      const txt = userText.toLowerCase();
+      if(txt.includes('hi') || txt.includes('हिं')) currentLang = 'hi';
+      else if(txt.includes('ka') || txt.includes('ಕನ್')) currentLang = 'kn';
+      else if(txt.includes('te') || txt.includes('తెలు')) currentLang = 'te';
+      else if(txt.includes('ta') || txt.includes('தமி')) currentLang = 'ta';
+      else if(txt.includes('ma') || txt.includes('മല')) currentLang = 'ml';
+      else currentLang = 'en';
 
-  // STEP 1 - NAME
-  if (!window.step) {
-  window.step = 1;
-  window.userData = {};
-  window.userData.sessionId = Date.now(); // 🔥 IMPORTANT
-    reply = "Namaste 🙏 आपका नाम क्या है?";
-  }
-
-  // STEP 2 - PHONE
-  else if (window.step === 1) {
-   window.userData.name = userText;
-
-console.log("NAME STEP HIT");   // 👈 DEBUG
-saveLead();
-    reply = `Nice to meet you ${userText} 😊\n\n📱 आपका मोबाइल नंबर बताइए`;
-    window.step = 2;
-  }
-
-  // STEP 3 - PHONE VALIDATION
-  else if (window.step === 2) {
-    let phone = userText.replace(/\D/g, '').slice(-10);
-
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      reply = "❌ Please enter valid 10-digit number";
-    } else {
-      window.userData.phone = phone;
-saveLead();
-      reply = "📍 अपना 6-digit PIN code बताइए";
-      window.step = 3;
+      t = translations[currentLang];
+      window.userData = {};
+      window.userData.sessionId = Date.now();
+      window.step = 1;
+      
+      // ✅ FLOW CHANGE: Bot sends the Welcome info AND asks for the name.
+      addBubble(t.welcome, 'bot');
     }
-  }
-
-  // STEP 4 - PIN + API
-  else if (window.step === 3) {
-    let pin = userText.replace(/\D/g, '');
-
-    if (!/^\d{6}$/.test(pin)) {
-      reply = "❌ Enter valid PIN code";
-    } else {
-
-      fetch(`https://api.postalpincode.in/pincode/${pin}`)
-        .then(res => res.json())
-        .then(data => {
-
-          removeTyping();
-
-          if (data[0].Status === "Success") {
-            const post = data[0].PostOffice[0];
-
-            window.userData.district = post.District;
-window.userData.state = post.State;
-
-saveLead();
-
-
-            addBubble(`📍 ${post.District}, ${post.State}`, 'bot');
-
-            addBubble("💼 किस type का job चाहिए?", 'bot');
-
-            showOptionBubbles([
-              "Delivery",
-              "BPO",
-              "Kitchen",
-              "Helper"
-            ]);
-
-            window.step = 4;
-          } else {
-            addBubble("❌ Invalid PIN code", 'bot');
-          }
-
-          statusEl.textContent = 'online';
-
-        });
-
-      return;
+    // STEP 1 - NAME -> ASK PHONE
+    else if (window.step === 1) {
+      window.userData.name = userText;
+      saveLead();
+      addBubble(t.askPhone.replace('{name}', userText), 'bot');
+      window.step = 2;
     }
-  }
+    // STEP 2 - PHONE -> ASK PIN
+    else if (window.step === 2) {
+      let phone = userText.replace(/\D/g, '').slice(-10);
+      if (!/^[6-9]\d{9}$/.test(phone)) {
+        addBubble(t.errPhone, 'bot');
+      } else {
+        window.userData.phone = phone;
+        saveLead();
+        addBubble(t.askPin, 'bot');
+        window.step = 3;
+      }
+    }
+    // STEP 3 - PIN + API -> ASK JOB
+    else if (window.step === 3) {
+      let pin = userText.replace(/\D/g, '');
+      if (!/^\d{6}$/.test(pin)) {
+        addBubble(t.errPin, 'bot');
+      } else {
+        fetch(`https://api.postalpincode.in/pincode/${pin}`)
+          .then(res => res.json())
+          .then(data => {
+            removeTyping();
+            if (data[0].Status === "Success") {
+              const post = data[0].PostOffice[0];
+              window.userData.district = post.District;
+              window.userData.state = post.State;
+              saveLead();
 
-  // STEP 5 - JOB → CITY
-  else if (window.step === 4) {
-    window.userData.job = userText;
-saveLead();
+              let successMsg = t.pinSuccess.replace('{district}', post.District).replace('{state}', post.State);
+              addBubble(successMsg, 'bot');
+              addBubble(t.askJob, 'bot');
+              showOptionBubbles(["Delivery", "BPO", "Kitchen", "Helper"]);
+              window.step = 4;
+            } else {
+              addBubble(t.errPin, 'bot');
+            }
+            statusEl.textContent = 'online';
+          });
+        return; 
+      }
+    }
+    // STEP 4 - JOB -> ASK CITY
+    else if (window.step === 4) {
+      window.userData.job = userText;
+      saveLead();
+      addBubble(t.askCity, 'bot');
+      showOptionBubbles(["Bangalore", "Chennai"]);
+      window.step = 5;
+    }
+    // STEP 5 - CITY -> ASK EXP
+    else if (window.step === 5) {
+      window.userData.city = userText;
+      saveLead();
+      addBubble(t.askExp, 'bot');
+      showOptionBubbles(["Fresher", "Experienced"]);
+      window.step = 6;
+    }
+    // STEP 6 - EXP -> ASK EDU
+    else if (window.step === 6) {
+      window.userData.experience = userText;
+      saveLead();
+      addBubble(t.askEdu, 'bot');
+      showOptionBubbles(["Below 10th", "10th", "12th", "Graduate"]);
+      window.step = 7;
+    }
+    // STEP 7 - SUMMARY
+    else if (window.step === 7) {
+      window.userData.education = userText;
+      saveLead();
 
-    addBubble("📍 Where do you want to work?", 'bot');
+      let finalSummary = t.summary
+        .replace('{name}', window.userData.name)
+        .replace('{phone}', window.userData.phone)
+        .replace('{district}', window.userData.district)
+        .replace('{state}', window.userData.state)
+        .replace('{job}', window.userData.job)
+        .replace('{city}', window.userData.city)
+        .replace('{exp}', window.userData.experience)
+        .replace('{edu}', window.userData.education);
 
-    showOptionBubbles([
-      "Bangalore",
-      "Chennai"
-    ]);
+      addBubble(finalSummary, 'bot');
 
-    window.step = 5;
-    return;
-  }
+      setTimeout(() => {
+        showFinalSupportButtons();
+      }, 1500);
 
-  // STEP 6 - CITY → EXPERIENCE
-  else if (window.step === 5) {
-    window.userData.city = userText;
-saveLead();
+      window.step = 0; 
+    }
 
-    addBubble("💼 Do you have any experience?", 'bot');
-
-    showOptionBubbles([
-      "Fresher",
-      "Experienced"
-    ]);
-
-    window.step = 6;
-    return;
-  }
-
-  // STEP 7 - EXPERIENCE → EDUCATION
-  else if (window.step === 6) {
-    window.userData.experience = userText;
-saveLead();
-
-    addBubble("🎓 What is your education?", 'bot');
-
-    showOptionBubbles([
-      "Below 10th",
-      "10th",
-      "12th",
-      "Graduate"
-    ]);
-
-    window.step = 7;
-    return;
-  }
-
-// STEP 8 - SUMMARY (The only one!)
-  else if (window.step === 7) {
-    window.userData.education = userText;
-    saveLead();
-
-    let summary = 
-`✅ **Details Summary**
-
-👤 ${window.userData.name}
-📱 ${window.userData.phone}
-📍 ${window.userData.district}, ${window.userData.state}
-
-💼 ${window.userData.job}
-🏙 ${window.userData.city}
-📊 ${window.userData.experience}
-🎓 ${window.userData.education}`;
-
-    addBubble(summary, 'bot');
-
-    // Show the buttons after a short delay
-    setTimeout(() => {
-      showFinalSupportButtons();
-    }, 1500);
-
-    window.step = 0; 
     statusEl.textContent = 'online';
-    return; // This "return" is key! It stops the bot from sending more bubbles.
-  }
-
-  // STEP 9 - CONFIRM
-
-  addBubble(reply, 'bot');
-  statusEl.textContent = 'online';
-
-}, 800);
-  statusEl.textContent = 'online';
+  }, 800);
 }
 
 function toggleMenu() {
   const m = document.getElementById('menu');
   m.style.display = m.style.display === 'block' ? 'none' : 'block';
 }
-
-function openLink(url) {
-  window.open(url, '_blank');
-}
-
+function openLink(url) { window.open(url, '_blank'); }
 function shareApp() {
   if (navigator.share) {
-    navigator.share({
-      title: "India Job Adda",
-      url: "https://ansar-droid.github.io/jobadda/"
-    });
+    navigator.share({ title: "India Job Adda", url: "https://ansar-droid.github.io/jobadda/" });
   } else {
     window.open("https://ansar-droid.github.io/jobadda/", '_blank');
   }
 }
-
 function sendChip(text) {
   document.getElementById('quick-replies').style.display = 'none';
   sendMessage(text);
 }
 
-// Auto-resize textarea
 msgInput.addEventListener('input', () => {
   msgInput.style.height = 'auto';
   msgInput.style.height = Math.min(msgInput.scrollHeight, 96) + 'px';
 });
-
-// Enter to send, Shift+Enter for newline
 msgInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
-
-// Focus input on load
 setTimeout(() => msgInput.focus(), 300);
-
 
 function showFinalSupportButtons() {
   const container = document.createElement('div');
@@ -977,14 +1041,12 @@ function showFinalSupportButtons() {
           </button>
         </div>
       </div>
-
       <div style="margin-bottom: 12px;">
         <strong style="color: #075E54; font-size: 13px;">2. Invite Loved Ones 🤝</strong>
         <button onclick="shareApp()" style="width:100%; margin-top: 8px; padding:10px; border-radius:8px; border:none; background:#25D366; color:#fff; font-weight:bold; cursor:pointer; font-size:13px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
           Share IndiaJobAdda
         </button>
       </div>
-
       <div>
         <strong style="color: #075E54; font-size: 13px;">3. Follow for Updates 🚀</strong>
         <div style="display:flex; justify-content:space-around; margin-top: 10px; padding: 5px; background: #f9f9f9; border-radius: 8px;">
@@ -997,79 +1059,45 @@ function showFinalSupportButtons() {
     </div>
   `;
   chatBg.appendChild(container);
-  scrollToBottom();
+  
+  // Build Dynamic FAQ Dropdown based on selected language
+  const faqSelect = document.getElementById('faq-dropdown');
+  faqSelect.innerHTML = `<option value="" disabled selected>${t.faqPlaceholder}</option>`;
+  
+  t.faqs.forEach((faq, index) => {
+    const opt = document.createElement('option');
+    opt.value = index; 
+    opt.textContent = faq.q;
+    faqSelect.appendChild(opt);
+  });
 
-  // 🔥 NEW: Hide the typing box and show the FAQ dropdown
   document.getElementById('msg').style.display = 'none';
-  document.getElementById('faq-dropdown').style.display = 'block';
+  faqSelect.style.display = 'block';
+  scrollToBottom();
 }
 
-// 🔥 NEW: Event Listener for the FAQ Dropdown Selection
+// FAQ Selection Listener
 document.getElementById('faq-dropdown').addEventListener('change', function(e) {
-  const question = e.target.value;
-  if (!question) return;
+  const index = e.target.value;
+  if (index === "") return;
+  
+  const selectedFaq = t.faqs[index];
+  e.target.value = ""; // reset
 
-  // Reset dropdown so user can select the same question again if they want
-  e.target.value = "";
-
-  // 1. Send the user's question bubble
-  addBubble(question, 'user');
+  addBubble(selectedFaq.q, 'user');
   statusEl.textContent = 'typing...';
   showTyping();
 
-  // 2. Reply with the answer after a short delay
   setTimeout(() => {
     removeTyping();
     statusEl.textContent = 'online';
 
-    // Editable placeholder text for the answer
-let answerText = "";
-
-switch(question) {
-  case "Whrere is my JoB location?":
-    answerText = "Your job location will be assigned based on the pin code and city you provided earlier. We try to keep it within a 10km radius! 📍";
-    break;
-  case "What is the Job roll available now?":
-    answerText = "Currently, we have exciting openings in Delivery, BPO, Kitchen staff, and Helper roles! 💼";
-    break;
-  case "What will be the salary ?":
-    answerText = "Salaries vary depending on the role and your experience, typically ranging from ₹15,000 to ₹30,000 per month. 💰";
-    break;
-  case "Is there an incentive":
-    answerText = "Yes! Most of our roles offer daily or weekly performance incentives on top of your base salary. 📈";
-    break;
-  case "How do i earn my referal bonus":
-    answerText = "When your friend joins using your referral link and completes 15 days of work, your bonus will be credited directly to your account! 🤝";
-    break;
-  case "Is there a travell allowance for Joining":
-    answerText = "Travel allowances depend on the specific company hiring you. HR will confirm this during your final interview. 🚆";
-    break;
-  case "How do i reach HR":
-    answerText = "You can easily reach our HR team by clicking the **WhatsApp** or **Call** buttons right below this message! 👇";
-    break;
-  case "What is the minimum education required ?":
-    answerText = "We have jobs for everyone! Whether you are below 10th pass, 12th pass, or a Graduate, we have a role for you. 🎓";
-    break;
-  case "Is English knowlege is mandate ?":
-    answerText = "Not for all roles! While BPO jobs might require basic English, Delivery and Helper roles usually only require the local language. 🗣️";
-    break;
-  case "Where is the Office ?":
-    answerText = "Our main office is located in Bengaluru, but the actual interview or joining location depends on the company you are hired for. 🏢";
-    break;
-  case "How is my carrier growth with India Job adda":
-    answerText = "We help you get your foot in the door! Many of our candidates get promoted to team leads or shift managers within 6-12 months of joining. 🚀";
-    break;
-  default:
-    answerText = "Please contact our HR team for more details on this! 😊";
-}
-
-    // Create a custom bot bubble that includes the answer + action buttons
     const row = document.createElement('div');
     row.className = 'row bot';
     row.innerHTML = `
       <div class="bot-av">AI</div>
       <div class="bubble bot">
-        ${answerText}
+        ${selectedFaq.a}
         <div style="display:flex; gap:8px; margin-top: 10px;">
           <button onclick="window.location.href='tel:+918040092083'" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;">
             <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" width="14"> Call
