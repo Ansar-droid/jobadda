@@ -116,8 +116,11 @@ x  <!DOCTYPE html>
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
-    position: relative;
-    z-index: 10;
+    position: fixed; /* Fixes header to the top */
+    top: 0;
+    width: 100%;
+    max-width: 480px; /* Matches your app width */
+    z-index: 100;
     box-shadow: 0 1px 3px rgba(0,0,0,0.25);
   }
 
@@ -147,7 +150,7 @@ x  <!DOCTYPE html>
   }
 
   /* ── Chat Background ── */
-  #chat-bg {
+  #chat-bg {margin-top: var(--wa-header-height); /* Add this line */
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
@@ -610,7 +613,7 @@ const translations = {
     welcome: "I'm **AddaMithra**, your job assistant. I can help you find jobs and apply easily. 😊\n\nWhat is your name?",
     askPhone: "Nice to meet you {name} 😊\n\n📱 Please share your 10-digit mobile number.",
     errPhone: "❌ Please enter a valid 10-digit number",
-    askPin: "📍Where are you from? Please share your 6-digit Area  PIN code",
+    askPin: "📍 Please share your 6-digit PIN code",
     errPin: "❌ Enter a valid PIN code",
     pinSuccess: "📍 {district}, {state}",
     askJob: "💼 What type of job are you looking for?",
