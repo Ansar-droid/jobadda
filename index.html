@@ -869,8 +869,17 @@ function saveLead() {
 
 async function sendMessage(text) {
   const userText = text || msgInput.value.trim();
-  if (!userText) return;
-  msgInput.value = ''; msgInput.style.height = 'auto';
+  if (!userText) {
+    msgInput.focus();
+    return;
+  }
+
+  msgInput.value = ''; 
+  msgInput.style.height = 'auto';
+  
+  // Force keyboard to stay open
+  msgInput.focus();
+
   addBubble(userText, 'user');
   history.push({ role: 'user', content: userText });
   statusEl.textContent = 'typing...';
@@ -879,7 +888,6 @@ async function sendMessage(text) {
   setTimeout(() => {
     removeTyping();
 
-    // STEP 0 - LANGUAGE SELECTION -> WELCOME & ASK NAME
     if (!window.step) {
       const txt = userText.toLowerCase();
       if(txt.includes('hi') || txt.includes('हिं')) currentLang = 'hi';
@@ -893,18 +901,14 @@ async function sendMessage(text) {
       window.userData = {};
       window.userData.sessionId = Date.now();
       window.step = 1;
-      
-      // ✅ FLOW CHANGE: Bot sends the Welcome info AND asks for the name.
       addBubble(t.welcome, 'bot');
     }
-    // STEP 1 - NAME -> ASK PHONE
     else if (window.step === 1) {
       window.userData.name = userText;
       saveLead();
       addBubble(t.askPhone.replace('{name}', userText), 'bot');
       window.step = 2;
     }
-    // STEP 2 - PHONE -> ASK PIN
     else if (window.step === 2) {
       let phone = userText.replace(/\D/g, '').slice(-10);
       if (!/^[6-9]\d{9}$/.test(phone)) {
@@ -916,7 +920,6 @@ async function sendMessage(text) {
         window.step = 3;
       }
     }
-    // STEP 3 - PIN + API -> ASK JOB
     else if (window.step === 3) {
       let pin = userText.replace(/\D/g, '');
       if (!/^\d{6}$/.test(pin)) {
@@ -931,9 +934,7 @@ async function sendMessage(text) {
               window.userData.district = post.District;
               window.userData.state = post.State;
               saveLead();
-
-              let successMsg = t.pinSuccess.replace('{district}', post.District).replace('{state}', post.State);
-              addBubble(successMsg, 'bot');
+              addBubble(t.pinSuccess.replace('{district}', post.District).replace('{state}', post.State), 'bot');
               addBubble(t.askJob, 'bot');
               showOptionBubbles(["Delivery", "BPO", "Kitchen", "Helper"]);
               window.step = 4;
@@ -945,7 +946,6 @@ async function sendMessage(text) {
         return; 
       }
     }
-    // STEP 4 - JOB -> ASK CITY
     else if (window.step === 4) {
       window.userData.job = userText;
       saveLead();
@@ -953,7 +953,6 @@ async function sendMessage(text) {
       showOptionBubbles(["Bangalore", "Chennai"]);
       window.step = 5;
     }
-    // STEP 5 - CITY -> ASK EXP
     else if (window.step === 5) {
       window.userData.city = userText;
       saveLead();
@@ -961,7 +960,6 @@ async function sendMessage(text) {
       showOptionBubbles(["Fresher", "Experienced"]);
       window.step = 6;
     }
-    // STEP 6 - EXP -> ASK EDU
     else if (window.step === 6) {
       window.userData.experience = userText;
       saveLead();
@@ -969,34 +967,27 @@ async function sendMessage(text) {
       showOptionBubbles(["Below 10th", "10th", "12th", "Graduate"]);
       window.step = 7;
     }
-    // STEP 7 - SUMMARY
     else if (window.step === 7) {
       window.userData.education = userText;
       saveLead();
-
       let finalSummary = t.summary
-        .replace('{name}', window.userData.name)
-        .replace('{phone}', window.userData.phone)
-        .replace('{district}', window.userData.district)
-        .replace('{state}', window.userData.state)
-        .replace('{job}', window.userData.job)
-        .replace('{city}', window.userData.city)
-        .replace('{exp}', window.userData.experience)
-        .replace('{edu}', window.userData.education);
-
+        .replace('{name}', window.userData.name).replace('{phone}', window.userData.phone)
+        .replace('{district}', window.userData.district).replace('{state}', window.userData.state)
+        .replace('{job}', window.userData.job).replace('{city}', window.userData.city)
+        .replace('{exp}', window.userData.experience).replace('{edu}', window.userData.education);
       addBubble(finalSummary, 'bot');
-
-      setTimeout(() => {
-        showFinalSupportButtons();
-      }, 1500);
-
+      setTimeout(() => showFinalSupportButtons(), 1500);
       window.step = 0; 
     }
 
     statusEl.textContent = 'online';
+    
+    // Ensure keyboard stays up for the next input
+    if (window.step !== 0) {
+       msgInput.focus();
+    }
   }, 800);
 }
-
 function toggleMenu() {
   const m = document.getElementById('menu');
   m.style.display = m.style.display === 'block' ? 'none' : 'block';
@@ -1012,8 +1003,9 @@ function shareApp() {
 function sendChip(text) {
   document.getElementById('quick-replies').style.display = 'none';
   sendMessage(text);
+  // Keep focus so the keyboard stays up if the next step is typing (like Name or Phone)
+  msgInput.focus();
 }
-
 msgInput.addEventListener('input', () => {
   msgInput.style.height = 'auto';
   msgInput.style.height = Math.min(msgInput.scrollHeight, 96) + 'px';
@@ -1021,6 +1013,15 @@ msgInput.addEventListener('input', () => {
 msgInput.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
+
+// This makes the green button work and keeps the keyboard open
+sendBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  sendMessage();
+  msgInput.focus(); 
+});
+
+
 setTimeout(() => msgInput.focus(), 300);
 
 // Force the footer into view when the keyboard pops up
@@ -1122,5 +1123,7 @@ document.getElementById('faq-dropdown').addEventListener('change', function(e) {
   }, 800);
 });
 </script>
+
+
 </body>
 </html>
