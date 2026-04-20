@@ -1085,7 +1085,6 @@ function showFinalSupportButtons() {
   `;
   chatBg.appendChild(container);
   
-  // Build Dynamic FAQ Dropdown based on selected language
   const faqSelect = document.getElementById('faq-dropdown');
   faqSelect.innerHTML = `<option value="" disabled selected>${t.faqPlaceholder}</option>`;
   
@@ -1098,18 +1097,33 @@ function showFinalSupportButtons() {
 
   document.getElementById('msg').style.display = 'none';
   faqSelect.style.display = 'block';
+
+  // Eye-catcher logic
+  faqSelect.classList.add('pulse-animation');
+  const pulseTimer = setTimeout(() => faqSelect.classList.remove('pulse-animation'), 5000);
+  faqSelect.onmousedown = () => {
+    clearTimeout(pulseTimer);
+    faqSelect.classList.remove('pulse-animation');
+  };
+
   scrollToBottom();
 }
+// --- PASTE THIS AT THE BOTTOM OF YOUR SCRIPT ---
 
-// FAQ Selection Listener
+// FAQ Selection Listener - This makes it send automatically
 document.getElementById('faq-dropdown').addEventListener('change', function(e) {
   const index = e.target.value;
-  if (index === "") return;
+  if (index === "" || index === null) return;
   
   const selectedFaq = t.faqs[index];
-  e.target.value = ""; // reset
+  
+  // 1. Reset dropdown to the placeholder immediately
+  e.target.selectedIndex = 0; 
 
+  // 2. Show the user's question in a bubble
   addBubble(selectedFaq.q, 'user');
+
+  // 3. Bot responds
   statusEl.textContent = 'typing...';
   showTyping();
 
