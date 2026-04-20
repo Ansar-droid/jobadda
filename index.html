@@ -1023,6 +1023,14 @@ msgInput.addEventListener('keydown', e => {
 });
 setTimeout(() => msgInput.focus(), 300);
 
+// Force the footer into view when the keyboard pops up
+msgInput.addEventListener('focus', () => {
+  setTimeout(() => {
+    document.getElementById('footer').scrollIntoView(false);
+    chatBg.scrollTop = chatBg.scrollHeight;
+  }, 300); // 300ms gives the phone keyboard time to fully slide up
+});
+
 function showFinalSupportButtons() {
   const container = document.createElement('div');
   container.className = 'row bot';
